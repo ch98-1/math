@@ -1,10 +1,10 @@
 //Copyright (C) 2014-2015  Corwin Hansen
 #include "math.h"
 
-FRACTION fltofr(FLOAT frac, UINT denom, FLOAT *diff){//convert float to fraction with max denominator and difference in ratio to 1 / denom to fill
+FRACTION fltocfr(FLOAT frac, UINT denom, FLOAT *diff){//convert float to closest fraction with max denominator and difference in ratio to 1 / denom to fill
 	FRACTION result;//result to return
 	if (uinttoint(denom) == inttoInt(0)){
-		printf("divided by 0 error\n");
+		if (giveerror) printf("divided by 0 error\n");
 		result.n = 0;//set as 0/0
 		result.d = 0;
 		return result;//return the result
@@ -22,6 +22,23 @@ FRACTION fltofr(FLOAT frac, UINT denom, FLOAT *diff){//convert float to fraction
 		}
 	}
 	return result;
+}
+
+FRACTION fltofr(FLOAT frac, UINT denom, FLOAT *diff){//convert float to fraction 
+	FRACTION current;//current fraction
+	FLOAT currdiff;//current difference
+	unsigned long int i;//counter
+	for (i = 1; i != 0; i++){//for each possible denominator
+		if (i == 0) break;//break out if looped over everything
+		current.d = inttoInt(i);//set denominator
+		current.n = fltoint(addfl(multfl(frac, current.d), fltoFl(0.5)));//get numerator
+		currdiff = subfl(frtofl(current), frac);//get difference
+		if (absfl(currdiff) == 0){//if current difference is smaller or it is a first loop
+			*diff = fltoFl(0);//set difference to 0
+			return current;//return current value
+		}
+	}
+	return fltocfr(frac, denom, diff);//get closest fraction if there was no exact fraction
 }
 
 FLOAT frtofl(FRACTION frac){//convert fraction to float
@@ -100,4 +117,52 @@ FLOAT absfl(FLOAT fl){//get absolute value of float
 		return subfl(fltoFl(0), fl);//get it to positive
 	else//if positive
 		return fl;//return the same number
+}
+
+FLOAT strtofl(const char *str){//convert string to float
+	return atof(str);//convert to float
+}
+
+INT strtoint(const char *str){//convert string to int
+	return  atol(str);//convert to long int
+}
+
+FRACTION strtofr(const char *str){//convert string to fractions
+	char val_1[VAL_LENGTH];
+	strcpy(val_1, str);
+	FRACTION result;//result to return
+	char *val_2 = strtok(val_1, "  /\r\n\t;\0");//get numerator
+	if (str == NULL){//if there was nothing
+		if (giveerror) printf("There was no valid fraction in the string \"%s\"\n", str);//give error message
+		result.d = 0;//set both to 0 for error
+		result.n = 0;
+		return result;//return result
+	}
+	result.n = strtoint(val_2);//set numerator
+	val_2 = strtok(NULL, "  /\r\n\t;");//get denominator
+	if (val_2 == NULL){//if there was nothing
+		if (giveerror) printf("There was no valid fraction in the string \"%s\"\n", str);//give error message
+		result.d = 0;//set both to 0 for error
+		result.n = 0;
+		return result;//return result
+	}
+	result.d = strtoint(val_2);//set denominator
+	if (Fltofl(result.d) == 0){
+		if (giveerror) printf("divided by 0 error\n");//give error message
+		result.d = 0;//set both to 0 for error
+		result.n = 0;
+	}
+	return result;//return result
+}
+
+int equalsfl(FLOAT a, FLOAT b){//if a equals b
+	return a == b;//get if a equals b
+}
+
+int equalsint(INT a, INT b){//if a equals b
+	return a == b;//get if a equals b
+}
+
+int equalsfr(FRACTION a, FRACTION b){//if a equals b
+	return equalsfl(frtofl(a), frtofl(b));//if each frction as float equals each other
 }
